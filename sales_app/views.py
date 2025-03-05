@@ -1,31 +1,41 @@
 from django.shortcuts import render
 from django.http import JsonResponse, HttpResponse
-from .models import Customer, Category, Product, Invoice, InvoiceProduct
+from .models import Customer, Category, Product, Invoice, InvoiceProduct, User
 from django.core.serializers import serialize
 from django.db.models import Avg, Max, Min, Sum, Count, Q
 
 def home(request):
-    # Update,create
-    try:
-        created, updated = Product.objects.update_or_create(
-            name='Mango',
-            defaults={
-                'price':666,
-                'unit':'per piece',
-                'img_url':'https://www.google.com',
-                'category_id':1,
-                'user_id':1
-            }
-        )
-        if created:
-            message = 'Product created successfully'
-        else:
-            message = 'Product updated successfully'
+    # new_product_outer = User.objects.filter().select_related('categories').values('id', 'username', 'categories__id', 'categories__name')#Direct left outer join
+    # query = str(new_product_outer.query)
+    # return JsonResponse({'query': query,'data': list(new_product_outer)})
+    
+    new_product_inner = Category.objects.filter().prefetch_related('user').values('id', 'name', 'user__id', 'user__username')#Reverse Inner join
+    query = str(new_product_inner.query)
+    return JsonResponse({'query': query, 'data': list(new_product_inner)})
+    
+    
+    # # Update,create
+    # try:
+    #     created, updated = Product.objects.update_or_create(
+    #         name='Mango',
+    #         defaults={
+    #             'price':666,
+    #             'unit':'per piece',
+    #             'img_url':'https://www.google.com',
+    #             'category_id':1,
+    #             'user_id':1
+    #         }
+    #     )
+    #     if created:
+    #         message = 'Product created successfully'
+    #     else:
+    #         message = 'Product updated successfully'
             
-        return JsonResponse({'message': message})
+    #     return JsonResponse({'message': message})
         
-    except Exception:
-        return JsonResponse({'message': 'Product not found'})
+    # except Exception:
+    #     return JsonResponse({'message': 'Product not found'})
+    
     # updated
     # try:
     #     product = Product.objects.get(id=22)
